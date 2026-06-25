@@ -1,0 +1,159 @@
+package grpc
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"time"
+
+	userv1 "github.com/alexgul25/protos/gen/go/user/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+)
+
+type Client struct {
+	api  userv1.UserServiceClient
+	conn *grpc.ClientConn
+}
+
+func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int) (*Client, error) {
+	const op = "grpc.New"
+
+	dialOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(
+			NewLoggingInterceptor(log),
+			NewRetryInterceptor(retriesCount, timeout),
+		),
+	}
+
+	conn, err := grpc.NewClient(addr, dialOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	grpcClient := userv1.NewUserServiceClient(conn)
+
+	return &Client{
+		api:  grpcClient,
+		conn: conn,
+	}, nil
+}
+
+func (c *Client) Close() error {
+	return c.conn.Close()
+}
+
+type RegisterInfo struct {
+	UserID      string
+	Email       string
+	DisplayName string
+	CreatedAt   string
+}
+
+func (c *Client) Register(ctx context.Context, email string, password string, displayName string) (*RegisterInfo, error) {
+	const op = "grpc.Client.Register"
+
+	resp, err := c.api.Register(ctx, &userv1.RegisterRequest{
+		Email:       email,
+		Password:    password,
+		DisplayName: displayName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &RegisterInfo{
+		UserID:      resp.UserId,
+		Email:       resp.Email,
+		DisplayName: resp.DisplayName,
+		CreatedAt:   resp.CreatedAt,
+	}, nil
+}
+
+func (c *Client) Login(ctx context.Context, email, password string) (string, error) {
+	const op = "grpc.Client.Login"
+
+	resp, err := c.api.Login(ctx, &userv1.LoginRequest{
+		Email:    email,
+		Password: password,
+	})
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp.AccessToken, nil
+}
+
+type MyProfileInfo struct {
+	UserID      string
+	Email       string
+	DisplayName string
+	CreatedAt   string
+}
+
+func (c *Client) GetMyProfile(ctx context.Context) (*MyProfileInfo, error) {
+	const op = "grpc.Client.GetMyProfile"
+
+	resp, err := c.api.GetMyProfile(ctx, &userv1.GetMyProfileRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &MyProfileInfo{
+		UserID:      resp.UserId,
+		Email:       resp.Email,
+		DisplayName: resp.DisplayName,
+		CreatedAt:   resp.CreatedAt,
+	}, nil
+}
+
+func (c *Client) Subscribe(ctx context.Context, followeeID string) error {
+	const op = "grpc.Client.Subscribe"
+
+	_, err := c.api.Subscribe(ctx, &userv1.SubscribeRequest{
+		FolloweeId: followeeID,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (c *Client) Unsubscribe(ctx context.Context, followeeID string) error {
+	const op = "grpc.Client.Unsubscribe"
+
+	_, err := c.api.Unsubscribe(ctx, &userv1.UnsubscribeRequest{
+		FolloweeId: followeeID,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+type FollowerInfo struct {
+	UserID      string
+	Email       string
+	DisplayName string
+}
+
+func (c *Client) GetFollowers(ctx context.Context, userID string) ([]FollowerInfo, error) {
+	const op = "grpc.Client.GetFollowers"
+
+	resp, err := c.api.GetFollowers(ctx, &userv1.GetFollowersRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	followers := make([]FollowerInfo, len(resp.Followers))
+	for i, follower := range resp.Followers {
+		followers[i] = FollowerInfo{UserID: follower.UserId, Email: follower.Email, DisplayName: follower.DisplayName}
+	}
+
+	return followers, nil
+}
