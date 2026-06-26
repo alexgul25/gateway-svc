@@ -9,6 +9,7 @@ import (
 	userv1 "github.com/alexgul25/protos/gen/go/user/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
@@ -48,7 +49,7 @@ type RegisterInfo struct {
 	UserID      string
 	Email       string
 	DisplayName string
-	CreatedAt   string
+	CreatedAt   time.Time
 }
 
 func (c *Client) Register(ctx context.Context, email string, password string, displayName string) (*RegisterInfo, error) {
@@ -67,7 +68,7 @@ func (c *Client) Register(ctx context.Context, email string, password string, di
 		UserID:      resp.UserId,
 		Email:       resp.Email,
 		DisplayName: resp.DisplayName,
-		CreatedAt:   resp.CreatedAt,
+		CreatedAt:   resp.CreatedAt.AsTime(),
 	}, nil
 }
 
@@ -85,26 +86,26 @@ func (c *Client) Login(ctx context.Context, email, password string) (string, err
 	return resp.AccessToken, nil
 }
 
-type MyProfileInfo struct {
+type GetMyProfileInfo struct {
 	UserID      string
 	Email       string
 	DisplayName string
-	CreatedAt   string
+	CreatedAt   time.Time
 }
 
-func (c *Client) GetMyProfile(ctx context.Context) (*MyProfileInfo, error) {
+func (c *Client) GetMyProfile(ctx context.Context) (*GetMyProfileInfo, error) {
 	const op = "grpc.Client.GetMyProfile"
 
-	resp, err := c.api.GetMyProfile(ctx, &userv1.GetMyProfileRequest{})
+	resp, err := c.api.GetMyProfile(ctx, &emptypb.Empty{})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &MyProfileInfo{
+	return &GetMyProfileInfo{
 		UserID:      resp.UserId,
 		Email:       resp.Email,
 		DisplayName: resp.DisplayName,
-		CreatedAt:   resp.CreatedAt,
+		CreatedAt:   resp.CreatedAt.AsTime(),
 	}, nil
 }
 
