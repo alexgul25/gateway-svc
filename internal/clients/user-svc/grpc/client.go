@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/alexgul25/gateway-svc/internal/models/user"
 )
 
 type Client struct {
@@ -45,14 +47,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-type RegisterInfo struct {
-	UserID      string
-	Email       string
-	DisplayName string
-	CreatedAt   time.Time
-}
-
-func (c *Client) Register(ctx context.Context, email string, password string, displayName string) (*RegisterInfo, error) {
+func (c *Client) Register(ctx context.Context, email string, password string, displayName string) (*user.RegisterInfo, error) {
 	const op = "grpc.Client.Register"
 
 	resp, err := c.api.Register(ctx, &userv1.RegisterRequest{
@@ -64,7 +59,7 @@ func (c *Client) Register(ctx context.Context, email string, password string, di
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &RegisterInfo{
+	return &user.RegisterInfo{
 		UserID:      resp.UserId,
 		Email:       resp.Email,
 		DisplayName: resp.DisplayName,
@@ -86,14 +81,7 @@ func (c *Client) Login(ctx context.Context, email, password string) (string, err
 	return resp.AccessToken, nil
 }
 
-type GetMyProfileInfo struct {
-	UserID      string
-	Email       string
-	DisplayName string
-	CreatedAt   time.Time
-}
-
-func (c *Client) GetMyProfile(ctx context.Context) (*GetMyProfileInfo, error) {
+func (c *Client) GetMyProfile(ctx context.Context) (*user.GetMyProfileInfo, error) {
 	const op = "grpc.Client.GetMyProfile"
 
 	resp, err := c.api.GetMyProfile(ctx, &emptypb.Empty{})
@@ -101,7 +89,7 @@ func (c *Client) GetMyProfile(ctx context.Context) (*GetMyProfileInfo, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &GetMyProfileInfo{
+	return &user.GetMyProfileInfo{
 		UserID:      resp.UserId,
 		Email:       resp.Email,
 		DisplayName: resp.DisplayName,
@@ -135,13 +123,7 @@ func (c *Client) Unsubscribe(ctx context.Context, followeeID string) error {
 	return nil
 }
 
-type FollowerInfo struct {
-	UserID      string
-	Email       string
-	DisplayName string
-}
-
-func (c *Client) GetFollowers(ctx context.Context, userID string) ([]FollowerInfo, error) {
+func (c *Client) GetFollowers(ctx context.Context, userID string) ([]user.FollowerInfo, error) {
 	const op = "grpc.Client.GetFollowers"
 
 	resp, err := c.api.GetFollowers(ctx, &userv1.GetFollowersRequest{
@@ -151,9 +133,9 @@ func (c *Client) GetFollowers(ctx context.Context, userID string) ([]FollowerInf
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	followers := make([]FollowerInfo, len(resp.Followers))
+	followers := make([]user.FollowerInfo, len(resp.Followers))
 	for i, follower := range resp.Followers {
-		followers[i] = FollowerInfo{UserID: follower.UserId, Email: follower.Email, DisplayName: follower.DisplayName}
+		followers[i] = user.FollowerInfo{UserID: follower.UserId, Email: follower.Email, DisplayName: follower.DisplayName}
 	}
 
 	return followers, nil
