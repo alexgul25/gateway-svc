@@ -23,8 +23,6 @@ func main() {
 
 	log := logger.New(cfg.Env)
 
-	// 4. Инициализировать grpc клиента
-
 	// 4. Инициализировать хендлеры
 
 	// 5. Организовать chi роутер
@@ -36,5 +34,5 @@ func main() {
 	// 8. Gracefull shotdown
 	<-appCtx.Done()
 
-	log.Info("AAAAAA")
+	log.Info("technical work, stay tuned")
 }

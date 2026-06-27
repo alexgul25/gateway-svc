@@ -11,6 +11,7 @@ require github.com/lmittmann/tint v1.1.3
 
 require (
 	github.com/alexgul25/protos v0.0.0-20260626211642-d5d1bbe74327
+	github.com/go-chi/chi/v5 v5.3.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	google.golang.org/grpc v1.81.1
