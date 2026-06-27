@@ -19,12 +19,13 @@ type Client struct {
 	conn *grpc.ClientConn
 }
 
-func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int) (*Client, error) {
+func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int, apiKey string) (*Client, error) {
 	const op = "grpc.New"
 
 	dialOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
+			NewAddingHeadersInterceptor(apiKey),
 			NewLoggingInterceptor(log),
 			NewRetryInterceptor(retriesCount, timeout),
 		),

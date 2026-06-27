@@ -12,7 +12,30 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var loggedHeaders = []string{"x-service-name"}
+const (
+	apiKeyHeader      = "x-api-key"
+	serviceNameHeader = "x-service-name"
+	userIDHeader      = "x-user-id"
+
+	serviceName = "gateway-svc"
+)
+
+var (
+	loggedHeaders = []string{userIDHeader}
+)
+
+func NewAddingHeadersInterceptor(apiKey string) grpc.UnaryClientInterceptor {
+	return grpc.UnaryClientInterceptor(
+		func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+			ctx = metadata.AppendToOutgoingContext(ctx,
+				apiKeyHeader, apiKey,
+				serviceNameHeader, serviceName,
+			)
+
+			return invoker(ctx, method, req, reply, cc, opts...)
+		},
+	)
+}
 
 func interceptorLogger(log *slog.Logger) grpclog.Logger {
 	return grpclog.LoggerFunc(func(ctx context.Context, level grpclog.Level, msg string, fields ...any) {
