@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alexgul25/gateway-svc/internal/lib/jwt"
+	jwtpt "github.com/alexgul25/gateway-svc/internal/lib/jwt"
 )
 
 var (
@@ -41,7 +41,7 @@ func NewAuthMiddleware(jwtSecret []byte) func(next http.Handler) http.Handler {
 				return
 			}
 
-			claims, err := jwt.ParseToken(tokenStr, jwtSecret)
+			claims, err := jwtpt.ParseToken(tokenStr, jwtSecret)
 			if err != nil {
 				log.Warn("failed to parse bearer token", slog.String("source", op), slog.Any("error", err))
 				w.Header().Set("WWW-Authenticate", "Bearer")
