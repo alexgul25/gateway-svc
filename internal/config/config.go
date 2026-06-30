@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	Env        string `envconfig:"ENV"`
-	HTTPServer HTTPServerConfig
-	JWT        JWTConfig
-	GRPCClient GRPCClientConfig
+	Env         string `envconfig:"ENV"`
+	ServiceName string `envconfig:"SERVICE_NAME" env-default:"gateway-svc"`
+	HTTPServer  HTTPServerConfig
+	JWT         JWTConfig
+	GRPCClient  GRPCClientConfig
 }
 
 type HTTPServerConfig struct {
@@ -28,7 +29,6 @@ type JWTConfig struct {
 
 type GRPCClientConfig struct {
 	UserServiceAddr string `envconfig:"USER_SERVICE_ADDR"`
-	APIKey          string `envconfig:"API_KEY"`
 }
 
 func load() (*Config, error) {
@@ -63,9 +63,6 @@ func LoadGatewayService() (*Config, error) {
 	}
 	if cfg.GRPCClient.UserServiceAddr == "" {
 		return nil, fmt.Errorf("%s env variable not set: USER_SERVICE_ADDR", op)
-	}
-	if cfg.GRPCClient.APIKey == "" {
-		return nil, fmt.Errorf("%s env variable not set: API_KEY", op)
 	}
 	if cfg.JWT.Secret == "" {
 		return nil, fmt.Errorf("%s env variable not set: JWT_SECRET", op)
