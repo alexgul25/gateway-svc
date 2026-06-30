@@ -1,4 +1,4 @@
-package grpc
+package grpcuserclient
 
 import (
 	"context"
@@ -19,13 +19,15 @@ type Client struct {
 	conn *grpc.ClientConn
 }
 
-func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int, apiKey string) (*Client, error) {
+func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int, serviceName string) (*Client, error) {
 	const op = "grpc.New"
+
+	addHeadersKeyVals := []string{HeaderServiceName, serviceName}
 
 	dialOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
-			NewAddingHeadersInterceptor(apiKey),
+			NewAddingHeadersInterceptor(addHeadersKeyVals),
 			NewLoggingInterceptor(log),
 			NewRetryInterceptor(retriesCount, timeout),
 		),

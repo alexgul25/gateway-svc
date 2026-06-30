@@ -1,4 +1,4 @@
-package grpc
+package grpcuserclient
 
 import (
 	"context"
@@ -13,24 +13,18 @@ import (
 )
 
 const (
-	apiKeyHeader      = "x-api-key"
-	serviceNameHeader = "x-service-name"
-	userIDHeader      = "x-user-id"
-
-	serviceName = "gateway-svc"
+	HeaderServiceName = "x-service-name"
+	HeaderUserID      = "x-user-id"
 )
 
 var (
-	loggedHeaders = []string{userIDHeader}
+	loggedHeaders = []string{HeaderServiceName, HeaderUserID}
 )
 
-func NewAddingHeadersInterceptor(apiKey string) grpc.UnaryClientInterceptor {
+func NewAddingHeadersInterceptor(kv []string) grpc.UnaryClientInterceptor {
 	return grpc.UnaryClientInterceptor(
 		func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-			ctx = metadata.AppendToOutgoingContext(ctx,
-				apiKeyHeader, apiKey,
-				serviceNameHeader, serviceName,
-			)
+			ctx = metadata.AppendToOutgoingContext(ctx, kv...)
 
 			return invoker(ctx, method, req, reply, cc, opts...)
 		},
