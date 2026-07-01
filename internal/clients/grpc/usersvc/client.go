@@ -1,4 +1,4 @@
-package grpcuserclient
+package usersvc
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	grpcclient "github.com/alexgul25/gateway-svc/internal/clients/grpc"
 	"github.com/alexgul25/gateway-svc/internal/models/user"
 )
 
@@ -22,14 +23,15 @@ type Client struct {
 func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int, serviceName string) (*Client, error) {
 	const op = "grpc.New"
 
-	addHeadersKeyVals := []string{HeaderServiceName, serviceName}
+	kvToAdd := []string{grpcclient.HeaderServiceName, serviceName}
+	headersToLog := []string{grpcclient.HeaderServiceName, grpcclient.HeaderUserID}
 
 	dialOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
-			NewAddingHeadersInterceptor(addHeadersKeyVals),
-			NewLoggingInterceptor(log),
-			NewRetryInterceptor(retriesCount, timeout),
+			grpcclient.NewAddingHeadersInterceptor(kvToAdd),
+			grpcclient.NewLoggingInterceptor(log, headersToLog),
+			grpcclient.NewRetryInterceptor(retriesCount, timeout),
 		),
 	}
 

@@ -1,4 +1,4 @@
-package grpcuserclient
+package grpcclient
 
 import (
 	"context"
@@ -10,15 +10,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-)
-
-const (
-	HeaderServiceName = "x-service-name"
-	HeaderUserID      = "x-user-id"
-)
-
-var (
-	loggedHeaders = []string{HeaderServiceName, HeaderUserID}
 )
 
 func NewAddingHeadersInterceptor(kv []string) grpc.UnaryClientInterceptor {
@@ -51,7 +42,7 @@ func interceptorLogger(log *slog.Logger) grpclog.Logger {
 	})
 }
 
-func NewLoggingInterceptor(log *slog.Logger) grpc.UnaryClientInterceptor {
+func NewLoggingInterceptor(log *slog.Logger, headersToLog []string) grpc.UnaryClientInterceptor {
 	logOpts := []grpclog.Option{
 		grpclog.WithFieldsFromContext(func(ctx context.Context) grpclog.Fields {
 			md, ok := metadata.FromOutgoingContext(ctx)
@@ -60,7 +51,7 @@ func NewLoggingInterceptor(log *slog.Logger) grpc.UnaryClientInterceptor {
 			}
 
 			fields := grpclog.Fields{}
-			for _, header := range loggedHeaders {
+			for _, header := range headersToLog {
 				if values := md.Get(header); len(values) != 0 {
 					fields = append(fields, header, values[0])
 				}
