@@ -18,7 +18,8 @@ type Config struct {
 
 type HTTPServerConfig struct {
 	Addr            string        `envconfig:"SERVER_ADDR"`
-	Timeout         time.Duration `envconfig:"SERVER_TIMEOUT" env-default:"4s"`
+	ReadTimeout     time.Duration `envconfig:"SERVER_READ_TIMEOUT" env-default:"4s"`
+	WriteTimeout    time.Duration `envconfig:"SERVER_WRITE_TIMEOUT" env-default:"8s"`
 	IdleTimeout     time.Duration `envconfig:"SERVER_IDLE_TIMEOUT" env-default:"60s"`
 	GracefulTimeout time.Duration `envconfig:"GRACEFUL_TIMEOUT" env-default:"10s"`
 }
@@ -28,7 +29,9 @@ type JWTConfig struct {
 }
 
 type GRPCClientConfig struct {
-	UserServiceAddr string `envconfig:"USER_SERVICE_ADDR"`
+	UserServiceAddr         string        `envconfig:"USER_SERVICE_ADDR"`
+	UserServiceTimeout      time.Duration `envconfig:"USER_SERVICE_TIMEOUT" env-default:"5s"`
+	UserServiceRetriesCount int           `envconfig:"USER_SERVICE_RETRY_COUNT" env-default:"3"`
 }
 
 func load() (*Config, error) {
