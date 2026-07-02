@@ -20,7 +20,7 @@ type Client struct {
 	conn *grpc.ClientConn
 }
 
-func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int, serviceName string) (*Client, error) {
+func NewClient(log *slog.Logger, addr string, timeout time.Duration, retriesCount int, serviceName string) (*Client, error) {
 	const op = "grpc.New"
 
 	kvToAdd := []string{grpcclient.HeaderServiceName, serviceName}

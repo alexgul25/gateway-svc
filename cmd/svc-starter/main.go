@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	httpapp "github.com/alexgul25/gateway-svc/internal/app/http"
+	"github.com/alexgul25/gateway-svc/internal/clients/grpc/usersvc"
 	"github.com/alexgul25/gateway-svc/internal/config"
 	"github.com/alexgul25/gateway-svc/internal/lib/logger"
 )
@@ -23,16 +25,35 @@ func main() {
 
 	log := logger.New(cfg.Env)
 
-	// 4. Инициализировать хендлеры
+	userClient, err := usersvc.NewClient(
+		log,
+		cfg.GRPCClient.UserServiceAddr,
+		cfg.GRPCClient.UserServiceTimeout,
+		cfg.GRPCClient.UserServiceRetriesCount,
+		cfg.ServiceName,
+	)
+	if err != nil {
+		log.Error("failed to create usersvc client", slog.Any("error", err))
+		os.Exit(1)
+	}
+	defer userClient.Close()
 
-	// 5. Организовать chi роутер
+	application := httpapp.New(
+		log,
+		userClient,
+		[]byte(cfg.JWT.Secret),
+		cfg.HTTPServer.Addr,
+		cfg.HTTPServer.ReadTimeout,
+		cfg.HTTPServer.WriteTimeout,
+		cfg.HTTPServer.IdleTimeout,
+		cfg.HTTPServer.GracefulTimeout,
+	)
 
-	// 6. Инициализировать сервер
+	go func() {
+		application.MustRun()
+	}()
 
-	// 7. Запустить сервер
-
-	// 8. Gracefull shotdown
 	<-appCtx.Done()
 
-	log.Info("technical work, stay tuned")
+	application.GracefulStop()
 }
