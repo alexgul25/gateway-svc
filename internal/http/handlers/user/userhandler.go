@@ -4,9 +4,12 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/alexgul25/gateway-svc/internal/dto"
 	"github.com/alexgul25/gateway-svc/internal/http/handlerutil"
 	"github.com/alexgul25/gateway-svc/internal/http/middleware"
+	"github.com/alexgul25/gateway-svc/internal/http/routing"
 	"github.com/alexgul25/gateway-svc/internal/models/user"
 )
 
@@ -142,12 +145,9 @@ func (h *Handler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	}
 	grpcCtx := handlerutil.EnrichGRPCContextWithUserID(ctx, userID)
 
-	var unsubscribeReq dto.UnsubscribeRequest
-	if ok := handlerutil.DecodeJSON(w, r, log, op, &unsubscribeReq); !ok {
-		return
-	}
+	followeeID := chi.URLParam(r, routing.ParamFolloweeID)
 
-	err := h.client.Unsubscribe(grpcCtx, unsubscribeReq.FolloweeID)
+	err := h.client.Unsubscribe(grpcCtx, followeeID)
 	if err != nil {
 		handlerutil.WriteGRPCError(w, ctx, log, op, err)
 		return
@@ -162,18 +162,18 @@ func (h *Handler) GetFollowers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := middleware.LoggerFromContext(ctx)
 
-	userID, ok := handlerutil.GetUserIDFromContext(w, ctx, log, op)
+	authUserID, ok := handlerutil.GetUserIDFromContext(w, ctx, log, op)
 	if !ok {
 		return
 	}
-	grpcCtx := handlerutil.EnrichGRPCContextWithUserID(ctx, userID)
+	grpcCtx := handlerutil.EnrichGRPCContextWithUserID(ctx, authUserID)
 
-	var getFollowersReq dto.GetFollowersRequest
-	if ok := handlerutil.DecodeJSON(w, r, log, op, &getFollowersReq); !ok {
-		return
+	targetUserID := chi.URLParam(r, routing.ParamUserID)
+	if targetUserID == "" {
+		targetUserID = authUserID
 	}
 
-	followers, err := h.client.GetFollowers(grpcCtx, getFollowersReq.UserID)
+	followers, err := h.client.GetFollowers(grpcCtx, targetUserID)
 	if err != nil {
 		handlerutil.WriteGRPCError(w, ctx, log, op, err)
 		return

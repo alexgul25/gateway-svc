@@ -39,20 +39,11 @@ type SubscribeRequest struct {
 	FolloweeID string `json:"followee_id"`
 }
 
-// UNSUBSCRIBE
-type UnsubscribeRequest struct {
-	FolloweeID string `json:"followee_id"`
-}
-
 // GET FOLLOWERS
 type Follower struct {
 	UserID      string `json:"user_id"`
 	DisplayName string `json:"display_name"`
 	Email       string `json:"email"`
-}
-
-type GetFollowersRequest struct {
-	UserID string `json:"user_id"`
 }
 
 type GetFollowersResponse struct {
