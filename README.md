@@ -10,19 +10,19 @@
 
 Примечания:
 
-- Определения `RegisterRequest`, `RegisterResponce` и т.д. можно найти в файле [dto/user.go](./internal/dto/user.go).
+- Подробности о структуре Body (`RegisterRequest`, `LoginRequest`, `SubscribeRequest`) и Response (`RegisterResponce` и т.д.) можно найти в файле [dto/user.go](./internal/dto/user.go).
 
 - Столбец `Auth` говорит о том, ожидается ли Auth Header вида `Authorization | Bearer <token>`
 
-| Method | Endpoint                        | Auth | Body               | Response             | Info                                     |
-| :----: | ------------------------------- | :--: | :----------------: | :------------------: | ---------------------------------------- |
-| POST   | /api/users                      | -    | RegisterRequest    | RegisterResponse     | Регистрация пользователя                 |
-| POST   | /api/auth/login                 | -    | LoginRequest       | LoginResponse        | Аутентификация пользователя              |
-| GET    | /api/users/me                   | +    | -                  | GetMyProfileResponse | Получение данных своего профиля          |
-| POST   | /api/subscriptions              | +    | SubscribeRequest   | -                    | Подписка на другого пользователя         |
-| DELETE | /api/subscriptions/{followeeID} | +    | -                  | -                    | Отписка от другого пользователя          |
-| GET    | /api/users/me/followers         | +    | -                  | GetFollowersResponse | Получение списка своих подписчиков       |
-| GET    | /api/users/{userID}/followers   | +    | -                  | GetFollowersResponse | Получение списка подписчиков по ID       |
+| Method | Endpoint                        | Auth | Body | Response | Info                                     |
+| :----: | ------------------------------- | :--: | :--: | :------: | ---------------------------------------- |
+| POST   | /api/users                      | ❌   | ✅   | ✅       | Регистрация пользователя                 |
+| POST   | /api/auth/login                 | ❌   | ✅   | ✅       | Аутентификация пользователя              |
+| GET    | /api/users/me                   | ✅   | ❌   | ✅       | Получение данных своего профиля          |
+| POST   | /api/subscriptions              | ✅   | ✅   | ❌       | Подписка на другого пользователя         |
+| DELETE | /api/subscriptions/{followeeID} | ✅   | ❌   | ❌       | Отписка от другого пользователя          |
+| GET    | /api/users/me/followers         | ✅   | ❌   | ✅       | Получение списка своих подписчиков       |
+| GET    | /api/users/{userID}/followers   | ✅   | ❌   | ✅       | Получение списка подписчиков по ID       |
 
 ## Архитектура
 
