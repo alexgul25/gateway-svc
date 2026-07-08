@@ -59,16 +59,16 @@ func LoadGatewayService() (*Config, error) {
 	}
 
 	if cfg.Env == "" {
-		return nil, fmt.Errorf("%s env variable not set: ENV", op)
+		return nil, fmt.Errorf("%s: env variable ENV not set", op)
 	}
 	if cfg.HTTPServer.Addr == "" {
-		return nil, fmt.Errorf("%s env variable not set: SERVER_ADDR", op)
+		return nil, fmt.Errorf("%s: env variable SERVER_ADDR not set", op)
 	}
 	if cfg.GRPCClient.UserServiceAddr == "" {
-		return nil, fmt.Errorf("%s env variable not set: USER_SERVICE_ADDR", op)
+		return nil, fmt.Errorf("%s: env variable USER_SERVICE_ADDR not set", op)
 	}
 	if cfg.JWT.Secret == "" {
-		return nil, fmt.Errorf("%s env variable not set: JWT_SECRET", op)
+		return nil, fmt.Errorf("%s: env variable JWT_SECRET not set", op)
 	}
 
 	return cfg, nil
