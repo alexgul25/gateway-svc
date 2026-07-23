@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 
+	placehandler "github.com/alexgul25/gateway-svc/internal/http/handlers/place"
 	userhandler "github.com/alexgul25/gateway-svc/internal/http/handlers/user"
 	"github.com/alexgul25/gateway-svc/internal/http/middleware"
 	"github.com/alexgul25/gateway-svc/internal/http/routing"
@@ -24,6 +25,7 @@ type ServerApp struct {
 func New(
 	log *slog.Logger,
 	userClient userhandler.UserClient,
+	placeClient placehandler.PlaceClient,
 	jwtSecret []byte,
 	serverAddr string,
 	readTimeout time.Duration,
@@ -32,6 +34,7 @@ func New(
 	gracefulTimeout time.Duration,
 ) *ServerApp {
 	userHandler := userhandler.New(userClient)
+	placeHandler := placehandler.New(placeClient)
 
 	router := chi.NewRouter()
 	router.Use(chimw.RequestID)
@@ -50,6 +53,10 @@ func New(
 			r.Delete(routing.PathSubscriptionByID, userHandler.Unsubscribe)
 			r.Get(routing.PathUsersMeFollowers, userHandler.GetFollowers)
 			r.Get(routing.PathUserFollowers, userHandler.GetFollowers)
+
+			r.Post(routing.PathPlaces, placeHandler.AddPlace)
+			r.Get(routing.PathMyPlaces, placeHandler.GetUserPlaces)
+			r.Get(routing.PathUserPlaces, placeHandler.GetUserPlaces)
 		})
 	})
 

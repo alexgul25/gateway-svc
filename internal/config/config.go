@@ -32,6 +32,10 @@ type GRPCClientConfig struct {
 	UserServiceAddr         string        `envconfig:"USER_SERVICE_ADDR"`
 	UserServiceTimeout      time.Duration `envconfig:"USER_SERVICE_TIMEOUT" env-default:"5s"`
 	UserServiceRetriesCount int           `envconfig:"USER_SERVICE_RETRY_COUNT" env-default:"3"`
+
+	PlaceServiceAddr         string        `envconfig:"PLACE_SERVICE_ADDR"`
+	PlaceServiceTimeout      time.Duration `envconfig:"PLACE_SERVICE_TIMEOUT" env-default:"5s"`
+	PlaceServiceRetriesCount int           `envconfig:"PLACE_SERVICE_RETRY_COUNT" env-default:"3"`
 }
 
 func load() (*Config, error) {
@@ -66,6 +70,9 @@ func LoadGatewayService() (*Config, error) {
 	}
 	if cfg.GRPCClient.UserServiceAddr == "" {
 		return nil, fmt.Errorf("%s: env variable USER_SERVICE_ADDR not set", op)
+	}
+	if cfg.GRPCClient.PlaceServiceAddr == "" {
+		return nil, fmt.Errorf("%s: env variable PLACE_SERVICE_ADDR not set", op)
 	}
 	if cfg.JWT.Secret == "" {
 		return nil, fmt.Errorf("%s: env variable JWT_SECRET not set", op)

@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	httpapp "github.com/alexgul25/gateway-svc/internal/app/http"
+	"github.com/alexgul25/gateway-svc/internal/clients/grpc/placesvc"
 	"github.com/alexgul25/gateway-svc/internal/clients/grpc/usersvc"
 	"github.com/alexgul25/gateway-svc/internal/config"
 	"github.com/alexgul25/gateway-svc/internal/lib/logger"
@@ -38,10 +39,26 @@ func main() {
 	}
 	defer userClient.Close()
 
+	placeClient, err := placesvc.NewClient(
+		log,
+		cfg.GRPCClient.PlaceServiceAddr,
+		cfg.GRPCClient.PlaceServiceTimeout,
+		cfg.GRPCClient.PlaceServiceRetriesCount,
+		cfg.ServiceName,
+	)
+	if err != nil {
+		log.Error("failed to create placesvc client", slog.Any("error", err))
+		os.Exit(1)
+	}
+	defer placeClient.Close()
+
+	jwtSecret := []byte(cfg.JWT.Secret)
+
 	application := httpapp.New(
 		log,
 		userClient,
-		[]byte(cfg.JWT.Secret),
+		placeClient,
+		jwtSecret,
 		cfg.HTTPServer.Addr,
 		cfg.HTTPServer.ReadTimeout,
 		cfg.HTTPServer.WriteTimeout,
