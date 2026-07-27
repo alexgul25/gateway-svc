@@ -16,6 +16,12 @@ type GetMyProfileInfo struct {
 	CreatedAt   time.Time
 }
 
+type PublicUserInfo struct {
+	ID          string
+	DisplayName string
+	CreatedAt   time.Time
+}
+
 type FollowerInfo struct {
 	UserID      string
 	Email       string

@@ -14,15 +14,16 @@
 
 - Столбец `Auth` говорит о том, ожидается ли Auth Header вида `Authorization | Bearer <token>`
 
-| Method | Endpoint                        | Auth | Body | Response | Info                                     |
-| :----: | ------------------------------- | :--: | :--: | :------: | ---------------------------------------- |
-| POST   | /api/users                      | ❌   | ✅   | ✅       | Регистрация пользователя                 |
-| POST   | /api/auth/login                 | ❌   | ✅   | ✅       | Аутентификация пользователя              |
-| GET    | /api/users/me                   | ✅   | ❌   | ✅       | Получение данных своего профиля          |
-| POST   | /api/subscriptions              | ✅   | ✅   | ❌       | Подписка на другого пользователя         |
-| DELETE | /api/subscriptions/{followeeID} | ✅   | ❌   | ❌       | Отписка от другого пользователя          |
-| GET    | /api/users/me/followers         | ✅   | ❌   | ✅       | Получение списка своих подписчиков       |
-| GET    | /api/users/{userID}/followers   | ✅   | ❌   | ✅       | Получение списка подписчиков по ID       |
+| Method | Endpoint                        | Auth | Body | Response | Info                                              |
+| :----: | ------------------------------- | :--: | :--: | :------: | ------------------------------------------------- |
+| POST   | /api/users                      | ❌   | ✅   | ✅       | Регистрация пользователя                          |
+| POST   | /api/auth/login                 | ❌   | ✅   | ✅       | Аутентификация пользователя                       |
+| GET    | /api/users/me                   | ✅   | ❌   | ✅       | Получение данных своего профиля                   |
+| GET    | /api/users?search_query=name    | ✅   | ❌   | ✅       | Поиск пользователей по имени                      |
+| POST   | /api/subscriptions              | ✅   | ✅   | ❌       | Подписка на другого пользователя                  |
+| DELETE | /api/subscriptions/{followeeID} | ✅   | ❌   | ❌       | Отписка от другого пользователя                   |
+| GET    | /api/users/me/followers         | ✅   | ❌   | ✅       | Получение списка своих подписчиков                |
+| GET    | /api/users/{userID}/followers   | ✅   | ❌   | ✅       | Получение списка подписчиков по ID                |
 
 ## Архитектура
 

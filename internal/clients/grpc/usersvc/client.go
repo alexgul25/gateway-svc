@@ -102,6 +102,22 @@ func (c *Client) GetMyProfile(ctx context.Context) (*user.GetMyProfileInfo, erro
 	}, nil
 }
 
+func (c *Client) FindUsersByDisplayName(ctx context.Context, searchQuery string) ([]user.PublicUserInfo, error) {
+	const op = "grpc.Client.FindUsersByDisplayName"
+
+	resp, err := c.api.FindUsersByDisplayName(ctx, &userv1.FindUsersByDisplayNameRequest{SearchQuery: searchQuery})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	users := make([]user.PublicUserInfo, len(resp.Users))
+	for i, u := range resp.Users {
+		users[i] = user.PublicUserInfo{ID: u.UserId, DisplayName: u.DisplayName, CreatedAt: u.CreatedAt.AsTime()}
+	}
+
+	return users, nil
+}
+
 func (c *Client) Subscribe(ctx context.Context, followeeID string) error {
 	const op = "grpc.Client.Subscribe"
 
