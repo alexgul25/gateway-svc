@@ -49,6 +49,8 @@ func New(
 			r.Use(middleware.NewAuthMiddleware(jwtSecret))
 
 			r.Get(routing.PathUsersMe, userHandler.GetMyProfile)
+			r.Get(routing.PathUsers, userHandler.FindUsersByDisplayName)
+
 			r.Post(routing.PathSubscriptions, userHandler.Subscribe)
 			r.Delete(routing.PathSubscriptionByID, userHandler.Unsubscribe)
 			r.Get(routing.PathUsersMeFollowers, userHandler.GetFollowers)
