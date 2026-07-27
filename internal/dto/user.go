@@ -34,6 +34,17 @@ type GetMyProfileResponse struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+// FIND USERS BY DISPLAY NAME
+type PublicUser struct {
+	ID          string    `json:"id"`
+	DisplayName string    `json:"display_name"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type FindUsersByDisplayNameResponse struct {
+	Users []PublicUser `json:"users"`
+}
+
 // SUBSCRIBE
 type SubscribeRequest struct {
 	FolloweeID string `json:"followee_id"`
