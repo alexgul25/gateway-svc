@@ -2,6 +2,7 @@ package userhandler
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -17,6 +18,7 @@ type UserClient interface {
 	Register(ctx context.Context, email string, password string, displayName string) (registerInfo *user.RegisterInfo, err error)
 	Login(ctx context.Context, email string, password string) (accessToken string, err error)
 	GetMyProfile(ctx context.Context) (getMyProfileInfo *user.GetMyProfileInfo, err error)
+	FindUsersByDisplayName(ctx context.Context, searchQuery string) ([]user.PublicUserInfo, error)
 	Subscribe(ctx context.Context, followeeID string) error
 	Unsubscribe(ctx context.Context, followeeID string) error
 	GetFollowers(ctx context.Context, userID string) ([]user.FollowerInfo, error)
@@ -105,6 +107,41 @@ func (h *Handler) GetMyProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handlerutil.WriteJSON(w, ctx, log, op, http.StatusOK, getMyProfileResp)
+}
+
+func (h *Handler) FindUsersByDisplayName(w http.ResponseWriter, r *http.Request) {
+	const op = "userhandler.FindUsersByDisplayName"
+
+	ctx := r.Context()
+	log := middleware.LoggerFromContext(ctx)
+
+	userID, ok := handlerutil.GetUserIDFromContext(w, ctx, log, op)
+	if !ok {
+		return
+	}
+	grpcCtx := handlerutil.EnrichGRPCContextWithUserID(ctx, userID)
+
+	searchQuery := r.URL.Query().Get("search_query")
+	if searchQuery == "" {
+		log.Warn("empty search query", slog.String("user_id", userID))
+		http.Error(w, "empty query param: search_query", http.StatusBadRequest)
+		return
+	}
+
+	users, err := h.client.FindUsersByDisplayName(grpcCtx, searchQuery)
+	if err != nil {
+		handlerutil.WriteGRPCError(w, ctx, log, op, err)
+		return
+	}
+
+	dtoUsers := make([]dto.PublicUser, len(users))
+	for i, u := range users {
+		dtoUsers[i] = dto.PublicUser{ID: u.ID, DisplayName: u.DisplayName, CreatedAt: u.CreatedAt}
+	}
+
+	FindUsersByDisplayNameResp := dto.FindUsersByDisplayNameResponse{Users: dtoUsers}
+
+	handlerutil.WriteJSON(w, ctx, log, op, http.StatusOK, FindUsersByDisplayNameResp)
 }
 
 func (h *Handler) Subscribe(w http.ResponseWriter, r *http.Request) {
