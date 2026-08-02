@@ -31,7 +31,7 @@ help:
 
 run-svc:
 	@echo "🚀 Запуск Gateway Service..."
-	@go run ./cmd/svc-starter/main.go
+	@go run ./cmd/svc-starter/main.go; exit 0
 
 register:
 	@echo "Запрос на регистрацию пользователя"; \
