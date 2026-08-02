@@ -28,6 +28,10 @@ help:
 	@echo "  make user-places    - Показать места пользователя по ID"
 	@echo "  make clean          - Удалить сохранённый JWT"
 
+run-svc:
+	@echo "🚀 Запуск Gateway Service..."
+	@go run ./cmd/svc-starter/main.go
+
 register:
 	@echo "Запрос на регистрацию пользователя"; \
 	read -p "Email: " email; \
