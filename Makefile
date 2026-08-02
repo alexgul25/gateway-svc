@@ -15,6 +15,7 @@ JWT := $(shell cat $(JWT_FILE) 2>/dev/null)
 
 help:
 	@echo "Доступные команды:"
+	@echo "  make run-svc        - Запустить Gateway Service (go run)"
 	@echo "  make register       - Регистрация нового пользователя"
 	@echo "  make login          - Аутентификация и сохранение JWT"
 	@echo "  make me             - Показать свой профиль"
