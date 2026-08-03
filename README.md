@@ -6,7 +6,7 @@
 
 Ссылка на канбан-доску проекта: **[Date Wishlist Hub - Development](https://github.com/users/alexgul25/projects/2)**
 
-*Стек технологий сервиса:* `Go`, `HTTP`, `gRPC`
+*Стек технологий сервиса:* `Go`  `HTTP`  `gRPC`
 
 ## :bulb: Описание сервиса
 
