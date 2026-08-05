@@ -63,7 +63,7 @@ login:
 	    echo "$$resp" | jq -r '.access_token' > $(JWT_FILE); \
 	    chmod 600 $(JWT_FILE); \
 	    echo "🔐  Токен сохранён в $(JWT_FILE)"; \
-		echo "✅  Пользователь авторизирован"; \
+		echo "✅  Пользователь авторизован"; \
 	else \
 	    echo "$$resp"; \
 	    echo "❌  Что-то пошло не так..."; \
