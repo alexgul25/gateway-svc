@@ -47,25 +47,25 @@
 
 ## :gear: Структура сервиса
 
-:open_file_folder: [./cmd](./cmd/) - команды для запуска приложения.
+:open_file_folder: **[./cmd](./cmd/)** - команды для запуска приложения.
 
-:open_file_folder: [./internal/app/http](./internal/app/http/) - сборка HTTP-сервера.
+:open_file_folder: **[./internal/app/http](./internal/app/http/)** - сборка HTTP-сервера.
 
-:open_file_folder: [./internal/clients/grpc](./internal/clients/grpc/) - абстракции для gRPC-клиентов, определённых в публичных Protobuf-контрактах.
+:open_file_folder: **[./internal/clients/grpc](./internal/clients/grpc/)** - абстракции для gRPC-клиентов, определённых в публичных Protobuf-контрактах.
 
-:open_file_folder: [./internal/config](./internal/config/) - загрузка файлов конфигурации.
+:open_file_folder: **[./internal/config](./internal/config/)** - загрузка файлов конфигурации.
 
-:open_file_folder: [./internal/dto](./internal/dto/) - определение объектов передачи данных.
+:open_file_folder: **[./internal/dto](./internal/dto/)** - определение объектов передачи данных.
 
-:open_file_folder: [./internal/http/handlers](./internal/http/handlers/) - определение **HTTP-хендлеров**.
+:open_file_folder: **[./internal/http/handlers](./internal/http/handlers/)** - определение **HTTP-хендлеров**.
 
-:open_file_folder: [./internal/http/handlerutil](./internal/http/handlerutil/) - общие функции для HTTP-хендлеров.
+:open_file_folder: **[./internal/http/handlerutil](./internal/http/handlerutil/)** - общие функции для HTTP-хендлеров.
 
-:open_file_folder: [./internal/http/routing](./internal/http/routing/) - константы для определения эндпоинтов.
+:open_file_folder: **[./internal/http/routing](./internal/http/routing/)** - константы для определения эндпоинтов.
 
-:open_file_folder: [./internal/lib](./internal/lib/) - общие вспомогательные утилиты и функции.
+:open_file_folder: **[./internal/lib](./internal/lib/)** - общие вспомогательные утилиты и функции.
 
-:open_file_folder: [./internal/models](./internal/models/) - модели для абстракции от данных, определённых в Protobuf-контрактах и возвращаемых gRPC-методами.
+:open_file_folder: **[./internal/models](./internal/models/)** - модели для абстракции от данных, определённых в Protobuf-контрактах и возвращаемых gRPC-методами.
 
 ## :desktop_computer: Локальный запуск и работа через терминал
 
@@ -111,6 +111,8 @@ HTTP-сервер является шлюзом и ожидает, что gRPC-�
 1. `make help` - узнайте о доступных командах.
 
 2. `make run-svc` - запустите HTTP-сервер.
+
+3. `CTRL + C` - пошлите серверу сигнал завершения, когда закончите работу.
 
 В отдельном терминале перейдите в корневую папку проекта и посылайте запросы на сервер.
 
