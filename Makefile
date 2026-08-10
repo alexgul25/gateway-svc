@@ -10,28 +10,40 @@ API := http://$(SERVER_ADDR)
 JWT_FILE := .jwt
 JWT := $(shell cat $(JWT_FILE) 2>/dev/null)
 
-.PHONY: help register login me search subscribe unsubscribe my-followers followers \
+BINARY := ./bin/svc-starter
+
+.PHONY: help run-svc stop-svc \
+		register login me search subscribe unsubscribe my-followers followers \
         add-place my-places user-places clean
 
 help:
 	@echo "Доступные команды:"
-	@echo "  make run-svc        - Запустить Gateway Service (go run)"
+	@echo "  make run-svc        - Запуск Gateway Service (go build)"
+	@echo "  make stop-svc       - Остановка Gateway Service (graceful)"
 	@echo "  make register       - Регистрация нового пользователя"
-	@echo "  make login          - Аутентификация и сохранение JWT"
-	@echo "  make me             - Показать свой профиль"
+	@echo "  make login          - Аутентификация и сохранение JWT в файл $(JWT_FILE) для использования в дальнейших запросах"
+	@echo "  make me             - Данные профиля по сохранённому JWT"
 	@echo "  make search         - Поиск пользователей по имени"
 	@echo "  make subscribe      - Подписаться на пользователя"
 	@echo "  make unsubscribe    - Отписаться от пользователя"
-	@echo "  make my-followers   - Список своих подписчиков"
+	@echo "  make my-followers   - Список подписчиков профиля по сохранённому JWT"
 	@echo "  make followers      - Список подписчиков пользователя по ID"
-	@echo "  make add-place      - Добавить место"
-	@echo "  make my-places      - Показать свои места"
+	@echo "  make add-place      - Добавление места в профиль по сохранённому JWT"
+	@echo "  make my-places      - Показать места профиля по сохранённому JWT"
 	@echo "  make user-places    - Показать места пользователя по ID"
 	@echo "  make clean          - Удалить сохранённый JWT"
 
 run-svc:
-	@echo "🚀 Запуск Gateway Service..."
-	@go run ./cmd/svc-starter/main.go; exit 0
+	@echo "🔨  Сборка сервиса..."
+	@mkdir -p ./bin
+	@go build -o $(BINARY) ./cmd/svc-starter/
+	@echo "🚀  Запуск Gateway Service..."
+	@$(BINARY); exit 0
+
+stop-svc:
+	@echo "🛑  Остановка Gateway Service..."
+	@echo "Поиск процесса $(BINARY)"
+	@pkill -INT -f '$(BINARY)' && echo "✅  Сигнал отправлен" || echo "❌  Процесс не найден"
 
 register:
 	@echo "Запрос на регистрацию пользователя"; \
