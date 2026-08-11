@@ -69,6 +69,10 @@
 
 ## :desktop_computer: Локальный запуск и работа через терминал
 
+В данном разделе приведена инструкция по запуску одного **Gateway Service**.
+
+Инструкция по запуску всего проекта целиком доступна по **[ссылке](https://github.com/alexgul25/date-wishlist-hub-deploy#desktop_computer-локальный-запуск-и-работа-через-терминал)**.
+
 ### 1. Подготовка окружения
 
 В вашем дистрибутиве должны быть установлены и готовы к работе:
@@ -101,7 +105,7 @@ git clone git@github.com:alexgul25/gateway-svc.git
 <details>
 <summary>Примечание</summary>
 
-HTTP-сервер является шлюзом и ожидает, что gRPC-сервисы (User Service, Place Service) уже запущены. Без них запросы будут возвращать `internal server error`. Инструкция для запуска всей системы находится [здесь](https://github.com/alexgul25/date-wishlist-hub-deploy).
+HTTP-сервер является шлюзом и ожидает, что gRPC-сервисы (User Service, Place Service) уже запущены. Без них запросы будут возвращать `internal server error`. Инструкция для запуска всей системы приведена в [начале раздела](#desktop_computer-локальный-запуск-и-работа-через-терминал).
 
 </details>
 <!-- markdownlint-enable MD033 -->
