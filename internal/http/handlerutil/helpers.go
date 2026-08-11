@@ -3,6 +3,7 @@ package handlerutil
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -25,8 +26,21 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, log *slog.Logger, op str
 	return true
 }
 
+type gRPCStatusErr interface {
+	error
+	GRPCStatus() *status.Status
+}
+
 func WriteGRPCError(w http.ResponseWriter, ctx context.Context, log *slog.Logger, op string, err error) {
-	st := status.Convert(err)
+	grpcErr, ok := errors.AsType[gRPCStatusErr](err)
+	if !ok {
+		log.ErrorContext(ctx, "WriteGRPCError: failed to parse err", slog.String("source", op), slog.Any("error", err))
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	st := grpcErr.GRPCStatus()
+
 	switch st.Code() {
 	case codes.InvalidArgument:
 		log.WarnContext(ctx, "invalid arguments in request", slog.String("source", op), slog.Any("error", err))
