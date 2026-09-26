@@ -12,7 +12,7 @@ import (
 
 type Config struct {
 	Env         string `envconfig:"ENV"`
-	ServiceName string `envconfig:"SERVICE_NAME" env-default:"gateway-svc"`
+	ServiceName string `envconfig:"SERVICE_NAME" default:"gateway-svc"`
 	HTTPServer  HTTPServerConfig
 	JWT         JWTConfig
 	GRPCClient  GRPCClientConfig
@@ -20,10 +20,10 @@ type Config struct {
 
 type HTTPServerConfig struct {
 	Addr            string        `envconfig:"SERVER_ADDR"`
-	ReadTimeout     time.Duration `envconfig:"SERVER_READ_TIMEOUT" env-default:"4s"`
-	WriteTimeout    time.Duration `envconfig:"SERVER_WRITE_TIMEOUT" env-default:"8s"`
-	IdleTimeout     time.Duration `envconfig:"SERVER_IDLE_TIMEOUT" env-default:"60s"`
-	GracefulTimeout time.Duration `envconfig:"GRACEFUL_TIMEOUT" env-default:"10s"`
+	ReadTimeout     time.Duration `envconfig:"SERVER_READ_TIMEOUT" default:"4s"`
+	WriteTimeout    time.Duration `envconfig:"SERVER_WRITE_TIMEOUT" default:"8s"`
+	IdleTimeout     time.Duration `envconfig:"SERVER_IDLE_TIMEOUT" default:"60s"`
+	GracefulTimeout time.Duration `envconfig:"GRACEFUL_TIMEOUT" default:"10s"`
 }
 
 type JWTConfig struct {
@@ -32,12 +32,12 @@ type JWTConfig struct {
 
 type GRPCClientConfig struct {
 	UserServiceAddr         string        `envconfig:"USER_SERVICE_ADDR"`
-	UserServiceTimeout      time.Duration `envconfig:"USER_SERVICE_TIMEOUT" env-default:"5s"`
-	UserServiceRetriesCount int           `envconfig:"USER_SERVICE_RETRY_COUNT" env-default:"3"`
+	UserServiceTimeout      time.Duration `envconfig:"USER_SERVICE_TIMEOUT" default:"5s"`
+	UserServiceRetriesCount int           `envconfig:"USER_SERVICE_RETRY_COUNT" default:"3"`
 
 	PlaceServiceAddr         string        `envconfig:"PLACE_SERVICE_ADDR"`
-	PlaceServiceTimeout      time.Duration `envconfig:"PLACE_SERVICE_TIMEOUT" env-default:"5s"`
-	PlaceServiceRetriesCount int           `envconfig:"PLACE_SERVICE_RETRY_COUNT" env-default:"3"`
+	PlaceServiceTimeout      time.Duration `envconfig:"PLACE_SERVICE_TIMEOUT" default:"5s"`
+	PlaceServiceRetriesCount int           `envconfig:"PLACE_SERVICE_RETRY_COUNT" default:"3"`
 }
 
 func load() (*Config, error) {
