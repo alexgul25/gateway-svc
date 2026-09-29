@@ -33,11 +33,11 @@ type JWTConfig struct {
 
 type GRPCClientConfig struct {
 	UserServiceAddr         string        `envconfig:"USER_SERVICE_ADDR"`
-	UserServiceTimeout      time.Duration `envconfig:"USER_SERVICE_TIMEOUT" default:"5s"`
+	UserServiceTimeout      time.Duration `envconfig:"USER_SERVICE_TIMEOUT" default:"2s"`
 	UserServiceRetriesCount int           `envconfig:"USER_SERVICE_RETRY_COUNT" default:"3"`
 
 	PlaceServiceAddr         string        `envconfig:"PLACE_SERVICE_ADDR"`
-	PlaceServiceTimeout      time.Duration `envconfig:"PLACE_SERVICE_TIMEOUT" default:"5s"`
+	PlaceServiceTimeout      time.Duration `envconfig:"PLACE_SERVICE_TIMEOUT" default:"2s"`
 	PlaceServiceRetriesCount int           `envconfig:"PLACE_SERVICE_RETRY_COUNT" default:"3"`
 }
 
