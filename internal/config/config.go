@@ -22,6 +22,7 @@ type HTTPServerConfig struct {
 	Addr            string        `envconfig:"SERVER_ADDR"`
 	ReadTimeout     time.Duration `envconfig:"SERVER_READ_TIMEOUT" default:"4s"`
 	WriteTimeout    time.Duration `envconfig:"SERVER_WRITE_TIMEOUT" default:"8s"`
+	HandlerTimeout  time.Duration `envconfig:"SERVER_HANDLER_TIMEOUT" default:"7s"`
 	IdleTimeout     time.Duration `envconfig:"SERVER_IDLE_TIMEOUT" default:"60s"`
 	GracefulTimeout time.Duration `envconfig:"GRACEFUL_TIMEOUT" default:"10s"`
 }
@@ -78,6 +79,10 @@ func LoadGatewayService() (*Config, error) {
 	}
 	if cfg.JWT.Secret == "" {
 		return nil, fmt.Errorf("%s: env variable JWT_SECRET not set", op)
+	}
+	if cfg.HTTPServer.HandlerTimeout <= 0 || cfg.HTTPServer.HandlerTimeout >= cfg.HTTPServer.WriteTimeout {
+		return nil, fmt.Errorf("%s: SERVER_HANDLER_TIMEOUT (%s) must be positive and less than SERVER_WRITE_TIMEOUT (%s)",
+			op, cfg.HTTPServer.HandlerTimeout, cfg.HTTPServer.WriteTimeout)
 	}
 
 	return cfg, nil

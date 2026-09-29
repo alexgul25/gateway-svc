@@ -30,6 +30,7 @@ func New(
 	serverAddr string,
 	readTimeout time.Duration,
 	writeTimeout time.Duration,
+	handlerTimeout time.Duration,
 	idleTimeout time.Duration,
 	gracefulTimeout time.Duration,
 ) *ServerApp {
@@ -40,6 +41,7 @@ func New(
 	router.Use(chimw.RequestID)
 	router.Use(middleware.NewLoggerMiddleware(log))
 	router.Use(chimw.Recoverer)
+	router.Use(chimw.Timeout(handlerTimeout))
 
 	router.Route("/api", func(rtr chi.Router) {
 		rtr.Post(routing.PathUsers, userHandler.Register)

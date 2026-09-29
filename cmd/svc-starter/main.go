@@ -62,6 +62,7 @@ func main() {
 		cfg.HTTPServer.Addr,
 		cfg.HTTPServer.ReadTimeout,
 		cfg.HTTPServer.WriteTimeout,
+		cfg.HTTPServer.HandlerTimeout,
 		cfg.HTTPServer.IdleTimeout,
 		cfg.HTTPServer.GracefulTimeout,
 	)
