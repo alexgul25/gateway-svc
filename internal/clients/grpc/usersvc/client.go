@@ -28,6 +28,7 @@ func NewClient(log *slog.Logger, addr string, timeout time.Duration, retriesCoun
 
 	dialOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDisableServiceConfig(),
 		grpc.WithChainUnaryInterceptor(
 			grpcclient.NewAddingHeadersInterceptor(kvToAdd),
 			grpcclient.NewLoggingInterceptor(log, headersToLog),
