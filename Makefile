@@ -14,21 +14,58 @@ SERVER_ADDR := $(shell grep -m1 '^SERVER_ADDR=' .env 2>/dev/null | cut -d'=' -f2
 ifeq ($(shell echo $(SERVER_ADDR) | cut -c1),:)
   SERVER_ADDR := localhost$(SERVER_ADDR)
 endif
-API := http://$(SERVER_ADDR)
+ifneq ($(SERVER_ADDR),)
+  API := http://$(SERVER_ADDR)
+endif
 
 JWT_FILE := .jwt
 JWT := $(shell cat $(JWT_FILE) 2>/dev/null | tr -d '\r\n')
 
-# Автоматически выбираем флаг для curl:
-# --fail-with-body (curl 7.76+) выводит тело ошибки при 4xx/5xx
-# -f (старый вариант) просто падает с кодом 22
-CURL_FAIL_FLAG := $(shell curl --help all 2>/dev/null | grep -q "fail-with-body" && echo "--fail-with-body" || echo "-f")
+# ------------------------------------------------------------------------------
+# Отправка HTTP-запроса к API
+#
+#   $(call request,МЕТОД,ПУТЬ[,JSON-ТЕЛО])
+#
+# Печатает ответ сервера целиком: статус, заголовки и тело (JSON форматируется
+# через jq). После вызова в shell доступны переменные:
+#   $$code - HTTP-код ответа (200, 404, 500...)
+#   $$body - тело ответа
+#
+# Цель завершается с ошибкой, только если запрос не удалось выполнить
+# (сервер недоступен, неверный адрес и т.п.). Ответ 4xx/5xx - это корректный
+# ответ сервера, поэтому make завершается успешно.
+#
+# Заголовок Authorization добавляется, если есть сохранённый JWT.
+# ------------------------------------------------------------------------------
+request = \
+	tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT; \
+	code=$$(curl -sS -X $(1) "$(API)$(2)" \
+		-o "$$tmp/body" -D "$$tmp/headers" -w '%{http_code}' \
+		$(if $(JWT),-H "Authorization: Bearer $(JWT)") \
+		$(if $(3),-H "Content-Type: application/json" -d "$(3)")) \
+		|| { echo "❌  Не удалось выполнить запрос $(1) $(API)$(2)"; exit 1; }; \
+	body=$$(cat "$$tmp/body"); \
+	echo "📬  Ответ сервера:"; \
+	tr -d '\r' < "$$tmp/headers"; \
+	if grep -qi '^content-type:.*json' "$$tmp/headers"; then \
+		printf '%s\n' "$$body" | jq . 2>/dev/null || printf '%s\n' "$$body"; \
+	elif [ -n "$$body" ]; then \
+		printf '%s\n' "$$body"; \
+	fi
+
+# Итоговая строка по коду ответа: $(call report,Сообщение при успехе)
+report = \
+	if [[ $$code == 2* ]]; then \
+		echo "✅  $(1)"; \
+	else \
+		echo "⚠️   Сервер вернул ошибку: HTTP $$code"; \
+	fi
 
 .PHONY: help build run run-only \
 		register login me search subscribe unsubscribe my-followers followers \
         add-place my-places user-places \
         clean clean-jwt clean-bin print-config \
-        _check_tools _check_jwt
+        _check_tools _check_api _check_jwt
 
 help: ## Показать список доступных команд
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -48,162 +85,78 @@ run-only: ## Запустить сервис без сборки (требует
 	@echo "🚀  Запуск $(SERVICE_NAME)..."
 	@exec "$(BINARY)"
 
-register: _check_tools ## Регистрация нового пользователя
+register: _check_tools _check_api ## Регистрация нового пользователя
 	@read -rp "Email: " email; \
 	read -rsp "Password: " pass; echo; \
 	read -rp "Display name: " name; \
 	payload=$$(jq -n --arg email "$$email" --arg pass "$$pass" --arg name "$$name" \
 		'{email: $$email, password: $$pass, display_name: $$name}'); \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -X POST $(API)/api/users \
-		-H "Content-Type: application/json" \
-		-d "$$payload" 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Пользователь зарегистрирован"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось зарегистрироваться"; \
-		exit 1; \
-	fi
+	$(call request,POST,/api/users,$$payload); \
+	$(call report,Пользователь зарегистрирован)
 
-login: _check_tools ## Аутентификация и сохранение JWT
+login: _check_tools _check_api ## Аутентификация и сохранение JWT
 	@read -rp "Email: " email; \
 	read -rsp "Password: " pass; echo; \
 	payload=$$(jq -n --arg email "$$email" --arg pass "$$pass" \
 		'{email: $$email, password: $$pass}'); \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -X POST $(API)/api/auth/login \
-		-H "Content-Type: application/json" \
-		-d "$$payload" 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "$$resp" | jq -r '.access_token' > $(JWT_FILE); \
-		chmod 600 $(JWT_FILE); \
-		echo "🔐  Токен сохранён в $(JWT_FILE)"; \
-		echo "✅  Пользователь авторизован"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось авторизоваться"; \
-		exit 1; \
+	$(call request,POST,/api/auth/login,$$payload); \
+	$(call report,Пользователь авторизован); \
+	if [[ $$code == 2* ]]; then \
+		token=$$(printf '%s' "$$body" | jq -r '.access_token // empty' 2>/dev/null); \
+		if [ -n "$$token" ]; then \
+			(umask 077; printf '%s\n' "$$token" > $(JWT_FILE)); \
+			echo "🔐  Токен сохранён в $(JWT_FILE)"; \
+		else \
+			echo "⚠️   В ответе нет поля access_token, токен не сохранён"; \
+		fi; \
 	fi
 
-me: _check_tools _check_jwt ## Данные профиля по JWT
-	@echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -H "Authorization: Bearer $(JWT)" $(API)/api/users/me 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Данные получены"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось получить данные"; \
-		exit 1; \
-	fi
+me: _check_tools _check_api _check_jwt ## Данные профиля по JWT
+	@$(call request,GET,/api/users/me); \
+	$(call report,Данные получены)
 
-search: _check_tools _check_jwt ## Поиск пользователей по имени
+search: _check_tools _check_api _check_jwt ## Поиск пользователей по имени
 	@read -rp "Имя для поиска: " q; \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -H "Authorization: Bearer $(JWT)" \
-		"$(API)/api/users?search_query=$$q" 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Пользователи найдены"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось выполнить поиск"; \
-		exit 1; \
-	fi
+	q=$$(jq -rn --arg q "$$q" '$$q | @uri'); \
+	$(call request,GET,/api/users?search_query=$$q); \
+	$(call report,Поиск выполнен)
 
-subscribe: _check_tools _check_jwt ## Подписаться на пользователя
+subscribe: _check_tools _check_api _check_jwt ## Подписаться на пользователя
 	@read -rp "ID пользователя для подписки: " id; \
 	payload=$$(jq -n --arg id "$$id" '{followee_id: $$id}'); \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -X POST -H "Authorization: Bearer $(JWT)" \
-		-H "Content-Type: application/json" \
-		-d "$$payload" $(API)/api/subscriptions 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Подписка на $$id"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось подписаться"; \
-		exit 1; \
-	fi
+	$(call request,POST,/api/subscriptions,$$payload); \
+	$(call report,Подписка на $$id)
 
-unsubscribe: _check_tools _check_jwt ## Отписаться от пользователя
+unsubscribe: _check_tools _check_api _check_jwt ## Отписаться от пользователя
 	@read -rp "ID пользователя для отписки: " id; \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -X DELETE -H "Authorization: Bearer $(JWT)" \
-		"$(API)/api/subscriptions/$$id" 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Отписка от $$id"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось отписаться"; \
-		exit 1; \
-	fi
+	$(call request,DELETE,/api/subscriptions/$$id); \
+	$(call report,Отписка от $$id)
 
-my-followers: _check_tools _check_jwt ## Список своих подписчиков
-	@echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -H "Authorization: Bearer $(JWT)" \
-		$(API)/api/users/me/followers 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Подписчики получены"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось получить подписчиков"; \
-		exit 1; \
-	fi
+my-followers: _check_tools _check_api _check_jwt ## Список своих подписчиков
+	@$(call request,GET,/api/users/me/followers); \
+	$(call report,Подписчики получены)
 
-followers: _check_tools _check_jwt ## Список подписчиков пользователя по ID
+followers: _check_tools _check_api _check_jwt ## Список подписчиков пользователя по ID
 	@read -rp "ID пользователя: " id; \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -H "Authorization: Bearer $(JWT)" \
-		"$(API)/api/users/$$id/followers" 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Подписчики получены"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось получить подписчиков"; \
-		exit 1; \
-	fi
+	$(call request,GET,/api/users/$$id/followers); \
+	$(call report,Подписчики получены)
 
-add-place: _check_tools _check_jwt ## Добавить место в профиль
+add-place: _check_tools _check_api _check_jwt ## Добавить место в профиль
 	@read -rp "Название места: " name; \
 	read -rp "Описание места: " info; \
 	payload=$$(jq -n --arg name "$$name" --arg info "$$info" \
 		'{name: $$name, info: $$info}'); \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -X POST -H "Authorization: Bearer $(JWT)" \
-		-H "Content-Type: application/json" \
-		-d "$$payload" $(API)/api/places 2>&1); then \
-		echo "$$resp" | jq . 2>/dev/null || echo "$$resp"; \
-		echo "✅  Место добавлено"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось добавить место"; \
-		exit 1; \
-	fi
+	$(call request,POST,/api/places,$$payload); \
+	$(call report,Место добавлено)
 
-my-places: _check_tools _check_jwt ## Показать свои места
-	@echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -H "Authorization: Bearer $(JWT)" \
-		$(API)/api/users/me/places 2>&1); then \
-		echo "$$resp" | jq '.places[] | {name, info, created_at}' 2>/dev/null || echo "$$resp"; \
-		echo "✅  Места получены"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось получить места"; \
-		exit 1; \
-	fi
+my-places: _check_tools _check_api _check_jwt ## Показать свои места
+	@$(call request,GET,/api/users/me/places); \
+	$(call report,Места получены)
 
-user-places: _check_tools _check_jwt ## Показать места пользователя по ID
+user-places: _check_tools _check_api _check_jwt ## Показать места пользователя по ID
 	@read -rp "ID пользователя: " id; \
-	echo "📬  Ответ сервера:"; \
-	if resp=$$(curl -s $(CURL_FAIL_FLAG) -H "Authorization: Bearer $(JWT)" \
-		"$(API)/api/users/$$id/places" 2>&1); then \
-		echo "$$resp" | jq '.places[] | {name, info, created_at}' 2>/dev/null || echo "$$resp"; \
-		echo "✅  Места получены"; \
-	else \
-		echo "$$resp"; \
-		echo "❌  Не удалось получить места"; \
-		exit 1; \
-	fi
+	$(call request,GET,/api/users/$$id/places); \
+	$(call report,Места получены)
 
 clean: clean-jwt clean-bin ## Очистить артефакты
 clean-jwt: ## Удалить сохранённый JWT
@@ -223,6 +176,13 @@ print-config: ## Показать текущую конфигурацию
 _check_tools:
 	@command -v curl >/dev/null 2>&1 || { echo "❌  curl не найден. Установите curl."; exit 1; }
 	@command -v jq >/dev/null 2>&1 || { echo "❌  jq не найден. Установите jq."; exit 1; }
+
+_check_api:
+	@if [ -z "$(API)" ]; then \
+		echo "❌  Адрес сервера не задан. Укажите SERVER_ADDR в .env или передайте API явно:"; \
+		echo "    make <цель> API=http://localhost:8082"; \
+		exit 1; \
+	fi
 
 _check_jwt:
 	@if [ -z "$(JWT)" ]; then \
