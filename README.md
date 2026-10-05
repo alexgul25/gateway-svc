@@ -47,7 +47,7 @@
 
 ## :gear: Структура сервиса
 
-:open_file_folder: **[./cmd](./cmd/)** - команды для запуска приложения.
+:open_file_folder: **[./cmd](./cmd/)** - команды для запуска приложения и проверки состояния.
 
 :open_file_folder: **[./internal/app/http](./internal/app/http/)** - сборка HTTP-сервера.
 
@@ -100,16 +100,20 @@ git clone git@github.com:alexgul25/gateway-svc.git
 <!-- markdownlint-disable MD033 -->
 <details>
 <summary>Особенности .env при запуске в Docker</summary>
+
 - `SERVER_ADDR` указывайте в формате `:<порт>` (например, `:8082`). Адрес вида `localhost:<порт>` внутри контейнера означает сам контейнер, и сервер будет недоступен снаружи.
 - Значения указывайте без кавычек: Docker передаёт их в контейнер как есть, вместе с кавычками.
 - `localhost` в `USER_SERVICE_ADDR` и `PLACE_SERVICE_ADDR` внутри контейнера тоже означает сам контейнер, а не вашу машину (см. подсказки к варианту запуска в Docker в [следующем шаге](#3-запуск-и-работа)).
+
 </details>
 <!-- markdownlint-enable MD033 -->
+
 ### 3. Запуск и работа
 
 <!-- markdownlint-disable MD033 -->
 <details>
 <summary>Примечание</summary>
+
 HTTP-сервер является шлюзом и ожидает, что gRPC-сервисы (User Service, Place Service) уже запущены. Без них запросы будут возвращать `internal server error`. Инструкция для запуска всей системы приведена в [начале раздела](#desktop_computer-локальный-запуск-и-работа-через-терминал).
 
 </details>
@@ -133,9 +137,12 @@ HTTP-сервер является шлюзом и ожидает, что gRPC-�
 <!-- markdownlint-disable MD033 -->
 <details>
 <summary>Подсказки</summary>
+
 - Если gRPC-сервисы запущены локально на вашей машине (не в Docker), запустите контейнер в сети хоста: `docker run --rm --name gateway-svc --network host --env-file .env gateway-svc`. В этом режиме `localhost` внутри контейнера означает вашу машину, а флаг `-p` не нужен. Режим работает в Docker Engine на Linux (в том числе в WSL2).
 - Если при сборке не удаётся скачать Go-модули (например, `proxy.golang.org` недоступен), передайте другой прокси через аргумент сборки: `docker build --build-arg GOPROXY=https://goproxy.io,direct -t gateway-svc .`
 - Чтобы запустить контейнер в фоне, замените `--rm` на `-d`. Логи сервиса можно посмотреть командой `docker logs -f gateway-svc`, остановить и удалить контейнер - командами `docker stop gateway-svc` и `docker rm gateway-svc`.
+- Проверить состояние запущенного сервиса можно командой `docker exec gateway-svc /app/healthcheck` (код завершения 0 означает, что сервис отвечает) или запросом `curl -i localhost:<порт>/healthz`.
+
 </details>
 <!-- markdownlint-enable MD033 -->
 #### Работа с API

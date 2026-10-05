@@ -13,6 +13,12 @@ FROM golang:${GO_VERSION}-alpine AS build
 
 WORKDIR /src
 
+# Откуда Go скачивает модули. По умолчанию официальный прокси,
+# но его можно переопределить при сборке:
+#   docker build --build-arg GOPROXY=https://goproxy.io,direct .
+ARG GOPROXY=https://proxy.golang.org,direct
+ENV GOPROXY=${GOPROXY}
+
 # Статическая сборка без C-зависимостей
 ENV CGO_ENABLED=0
 
@@ -26,7 +32,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 COPY . .
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -ldflags="-s -w" -o /out/gateway-svc ./cmd/svc-starter
+    go build -trimpath -ldflags="-s -w" -o /out/gateway-svc ./cmd/svc-starter && \
+    go build -trimpath -ldflags="-s -w" -o /out/healthcheck ./cmd/healthcheck
 
 # ============================================================
 # Стадия 2: runtime — минимальный образ только с бинарником
@@ -35,7 +42,7 @@ FROM gcr.io/distroless/static:nonroot AS runtime
 
 WORKDIR /app
 
-COPY --from=build /out/gateway-svc /app/gateway-svc
+COPY --from=build /out/gateway-svc /out/healthcheck /app/
 
 # Запуск от непривилегированного пользователя
 USER nonroot:nonroot
