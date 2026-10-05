@@ -38,6 +38,9 @@ func New(
 	placeHandler := placehandler.New(placeClient)
 
 	router := chi.NewRouter()
+
+	router.Use(chimw.Heartbeat(routing.PathHealth))
+
 	router.Use(chimw.RequestID)
 	router.Use(middleware.NewLoggerMiddleware(log))
 	router.Use(chimw.Recoverer)

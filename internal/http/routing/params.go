@@ -15,4 +15,6 @@ const (
 	PathPlaces     = "/places"
 	PathMyPlaces   = "/users/me/places"
 	PathUserPlaces = "/users/{" + ParamUserID + "}/places"
+
+	PathHealth = "/healthz"
 )
