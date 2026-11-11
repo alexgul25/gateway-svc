@@ -1,10 +1,10 @@
 # :globe_with_meridians: Gateway Service
 
-Микросервис для проекта **Date Wishlist Hub**.
+Микросервис для проекта **НамТуда**.
 
-Ссылка на центральный репозиторий проекта: **[Date Wishlist Hub Deploy](https://github.com/alexgul25/date-wishlist-hub-deploy)**
+Ссылка на центральный репозиторий проекта: **[НамТуда](https://github.com/alexgul25/namtuda)**
 
-Ссылка на канбан-доску проекта: **[Date Wishlist Hub - Development](https://github.com/users/alexgul25/projects/2)**
+Ссылка на канбан-доску проекта: **[НамТуда - Разработка](https://github.com/users/alexgul25/projects/2)**
 
 *Стек технологий сервиса:* `Go`  `HTTP`  `gRPC`
 
@@ -12,7 +12,7 @@
 
 **Gateway Service** - внешний HTTP-сервер, предоставляющий публичные эндпоинты для всех функций проекта (единая точка входа для пользователей).
 
-- Получает запрос от пользователя и через gRPC-клиент вызывает нужный метод **[User Service](https://github.com/alexgul25/user-svc)** или **[Place Service](https://github.com/alexgul25/place-svc)** (см. [архитектуру проекта](https://github.com/alexgul25/date-wishlist-hub-deploy#building_construction-архитектура-проекта)).
+- Получает запрос от пользователя и через gRPC-клиент вызывает нужный метод **[User Service](https://github.com/alexgul25/user-svc)** или **[Place Service](https://github.com/alexgul25/place-svc)** (см. [архитектуру проекта](https://github.com/alexgul25/namtuda#building_construction-архитектура-проекта)).
 
 - Protobuf-контракты определены публично в **[Protos](https://github.com/alexgul25/protos)**.
 
@@ -71,7 +71,7 @@
 
 В данном разделе приведена инструкция по запуску одного **Gateway Service**. Сервис можно запустить двумя способами: собрать и запустить бинарник локально или запустить в Docker-контейнере.
 
-Инструкция по запуску всего проекта целиком доступна по **[ссылке](https://github.com/alexgul25/date-wishlist-hub-deploy#desktop_computer-локальный-запуск-и-работа-через-терминал)**.
+Инструкция по запуску всего проекта целиком доступна по **[ссылке](https://github.com/alexgul25/namtuda#desktop_computer-локальный-запуск-и-работа-через-терминал)**.
 
 ### 1. Подготовка окружения
 
